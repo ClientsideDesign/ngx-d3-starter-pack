@@ -7,6 +7,9 @@ import { BarComponent } from './charts/bar/bar.component';
 import { LineComponent } from './charts/line/line.component';
 import { MapComponent } from './charts/map/map.component';
 import { VennComponent } from './charts/venn/venn.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MatRadioModule } from '@angular/material/radio';
 
 @NgModule({
   declarations: [
@@ -18,7 +21,11 @@ import { VennComponent } from './charts/venn/venn.component';
     VennComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    BrowserAnimationsModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatRadioModule
   ],
   providers: [],
   bootstrap: [AppComponent]
