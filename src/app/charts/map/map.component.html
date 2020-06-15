@@ -1,0 +1,27 @@
+<!--
+<mat-radio-group [(ngModel)]="dataView">
+  <mat-radio-button value="map">Map</mat-radio-button>
+  <mat-radio-button value="table">Table</mat-radio-button>
+</mat-radio-group>
+-->
+
+<div #chart
+  [hidden]="dataView!=='map'"></div>
+
+<table *ngIf="dataView==='table' && data"
+  class="house_style">
+  <thead>
+    <tr>
+      <th>Country</th>
+      <th>{{dataTitle}}</th>
+      <th>Share</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let country of data">
+      <td>{{country.name}}</td>
+      <td>{{country.value}}</td>
+      <td *ngIf="populationTotal">{{country.value / populationTotal | percent}}</td>
+    </tr>
+  </tbody>
+</table>

@@ -2,6 +2,16 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.0.
 
+## Description
+
+A barebones implementation of [D3](https://github.com/d3/d3) in Angular, with the following sample charts:
+
+- Pie Chart
+- Line Chart
+- Bar Chart
+- Venn Diagram (uses [Venn.js](https://github.com/benfred/venn.js/))
+- World Map
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.

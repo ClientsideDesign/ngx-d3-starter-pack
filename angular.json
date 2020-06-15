@@ -26,7 +26,11 @@
             "styles": [
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/d3/dist/d3.js",
+              "./node_modules/topojson-client/dist/topojson-client.js",
+              "./node_modules/venn.js/build/venn.min.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -90,7 +94,11 @@
             "styles": [
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/d3/dist/d3.js",
+              "./node_modules/topojson-client/dist/topojson-client.js",
+              "./node_modules/venn.js/build/venn.min.js"
+            ]
           }
         },
         "lint": {
@@ -119,6 +127,7 @@
           }
         }
       }
-    }},
+    }
+  },
   "defaultProject": "ngx-d3-starter-pack"
 }
