@@ -29,7 +29,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.data.sort((a, b) => {
       return b.value - a.value;
     });
-    d3.json('./../../assets/map-data/countries-110m-no-antarctica.json').then((mapData: WorldAtlas) => {
+    d3.json('assets/map-data/countries-110m-no-antarctica.json').then((mapData: WorldAtlas) => {
       const geometries = mapData.objects.countries.geometries;
       geometries.forEach((geometry) => {
         const countryData = this.data.find(population => population.id === parseInt(geometry.id as string, 10));
