@@ -119,6 +119,10 @@
               "devServerTarget": "ngx-d3-starter-pack:serve:production"
             }
           }
+        },
+        "deploy": {
+          "builder": "angular-cli-ghpages:deploy",
+          "options": {}
         }
       }
     }
