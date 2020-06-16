@@ -183,9 +183,9 @@ export class VennComponent implements AfterViewInit, OnDestroy {
       .style('mix-blend-mode', (d: VennDiagramSet) => {
         return d.label ? 'multiply' : 'normal';
       });
-    d3.selectAll('.tooltip_value').remove();
-    d3.selectAll('.tooltip_label').remove();
-    d3.selectAll('.tooltip_background').remove();
+    d3.select(chartWrapper).selectAll('.tooltip_value').remove();
+    d3.select(chartWrapper).selectAll('.tooltip_label').remove();
+    d3.select(chartWrapper).selectAll('.tooltip_background').remove();
   }
 
 }

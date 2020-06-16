@@ -144,7 +144,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('fill', 'none')
       .attr('pointer-events', 'all')
       .on('mouseover', () => {
-        this.removeTooltips();
+        this.removeTooltips(svg);
       });
 
     const lineFx = d3.line()
@@ -177,7 +177,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
         .attr('fill', '#f2f3f4')
         .attr('opacity', 0.5)
         .on('mouseover', () => {
-          this.removeTooltips();
+          this.removeTooltips(svg);
         });
     });
 
@@ -185,17 +185,17 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
 
     svg.append('g')
       .call(y0Axis);
-    d3.selectAll('.domain_0 .domain')
+    svg.selectAll('.domain_0 .domain')
       .style('stroke', '#000000');
-    d3.selectAll('.domain_0 .tick line')
+    svg.selectAll('.domain_0 .tick line')
       .style('stroke', '#000000');
 
     if (secondAxis) {
       svg.append('g')
         .call(y1Axis);
-      d3.selectAll('.domain_1 .domain')
+      svg.selectAll('.domain_1 .domain')
         .style('stroke', '#000000');
-      d3.selectAll('.domain_1 .tick line')
+      svg.selectAll('.domain_1 .tick line')
         .style('stroke', '#000000');
     }
 
@@ -281,7 +281,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
 
   addTooltip(svg, value, prevValue, x, y, lastPoint, groupData, color, secondAxis, width, margin) {
 
-    this.removeTooltips();
+    this.removeTooltips(svg);
     // Make sure any old tooltips have been removed first
     const tooltipGuideline = svg.append('path').attr('class', 'tooltip_guideline');
     const tooltipBackground = svg.append('rect').attr('class', 'tooltip_background');
@@ -311,14 +311,14 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('d', d3.line()([[x, y + 0.5], [secondAxis ? width - margin.right : margin.left, y + 0.5]]));
 
     if (secondAxis) {
-      d3.selectAll('.domain_1 .domain')
+      svg.selectAll('.domain_1 .domain')
         .style('stroke', color);
-      d3.selectAll('.domain_1 .tick line')
+      svg.selectAll('.domain_1 .tick line')
         .style('stroke', color);
     } else {
-      d3.selectAll('.domain_0 .domain')
+      svg.selectAll('.domain_0 .domain')
         .style('stroke', color);
-      d3.selectAll('.domain_0 .tick line')
+      svg.selectAll('.domain_0 .tick line')
         .style('stroke', color);
     }
 
@@ -368,7 +368,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('stroke', '#ffffff')
       .style('stroke-width', '1px')
       .on('mouseout', () => {
-        this.removeTooltips();
+        this.removeTooltips(svg);
       });
 
     if (lastPoint) {
@@ -381,18 +381,18 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
-  removeTooltips() {
-    d3.selectAll('.tooltip_value').remove();
-    d3.selectAll('.tooltip_change').remove();
-    d3.selectAll('.tooltip_background').remove();
-    d3.selectAll('.tooltip_guideline').remove();
-    d3.selectAll('.domain_0 .domain')
+  removeTooltips(svg) {
+    svg.selectAll('.tooltip_value').remove();
+    svg.selectAll('.tooltip_change').remove();
+    svg.selectAll('.tooltip_background').remove();
+    svg.selectAll('.tooltip_guideline').remove();
+    svg.selectAll('.domain_0 .domain')
       .style('stroke', '#000000');
-    d3.selectAll('.domain_0 .tick line')
+    svg.selectAll('.domain_0 .tick line')
       .style('stroke', '#000000');
-    d3.selectAll('.domain_1 .domain')
+    svg.selectAll('.domain_1 .domain')
       .style('stroke', '#000000');
-    d3.selectAll('.domain_1 .tick line')
+    svg.selectAll('.domain_1 .tick line')
       .style('stroke', '#000000');
   }
 }

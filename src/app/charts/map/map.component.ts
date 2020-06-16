@@ -76,7 +76,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       .attr('fill', 'none')
       .attr('pointer-events', 'all')
       .on('mouseover', () => {
-        this.removeTooltips();
+        this.removeTooltips(svg);
       });
 
     const geojson = topojson.feature(mapData, mapData.objects.countries);
@@ -100,14 +100,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         } else {
           countryArea.attr('fill', '#eeeeee');
           countryArea.on('mouseover', () => {
-            this.removeTooltips();
+            this.removeTooltips(svg);
           });
         }
       });
   }
 
   addTooltip(svg, value, populationShare, countryName, translate, dataTitle) {
-    this.removeTooltips();
+    this.removeTooltips(svg);
     // Make sure any old tooltips have been removed first
     const tooltipBackground = svg.append('rect').attr('class', 'tooltip_background');
     const tooltipCountry = svg.append('text').attr('class', 'tooltip_country');
@@ -151,14 +151,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       .attr('x', tooltipDimensions.width * -0.5)
       .attr('y', (tooltipDimensions.height * -0.5) + (tooltipPadding * 0.3))
       .on('mouseout', () => {
-        this.removeTooltips();
+        this.removeTooltips(svg);
       });
   }
 
-  removeTooltips() {
-    d3.selectAll('.tooltip_value').remove();
-    d3.selectAll('.tooltip_country').remove();
-    d3.selectAll('.tooltip_background').remove();
+  removeTooltips(svg) {
+    svg.selectAll('.tooltip_value').remove();
+    svg.selectAll('.tooltip_country').remove();
+    svg.selectAll('.tooltip_background').remove();
   }
 
 
