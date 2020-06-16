@@ -38,13 +38,13 @@ export class AppComponent {
         emailGrowth: {
           label: 'CDs',
           values: [100, 120, 150, 120, 80, 90],
-          unit: '£',
+          unit: 'GBP',
           secondAxis: false
         },
         smsGrowth: {
           label: 'DVDs',
           values: [60, 50, 90, 70, 125, 130],
-          unit: '£',
+          unit: 'GBP',
           secondAxis: false
         }
       },

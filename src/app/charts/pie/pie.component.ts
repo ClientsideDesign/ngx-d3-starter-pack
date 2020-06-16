@@ -4,11 +4,13 @@ import * as d3 from 'd3';
 import { Subscription } from 'rxjs';
 import { LabelledChartData } from '../chart-interfaces';
 import { PieArcDatum } from 'd3';
+import { CurrencyPipe } from '@angular/common';
 
 @Component({
   selector: 'app-pie',
   templateUrl: './pie.component.html',
-  styleUrls: ['./pie.component.css']
+  styleUrls: ['./pie.component.css'],
+  providers: [CurrencyPipe]
 })
 export class PieComponent implements AfterViewInit, OnDestroy {
   @ViewChild('chart') chart;
@@ -16,8 +18,9 @@ export class PieComponent implements AfterViewInit, OnDestroy {
   parentWidth = 0;
   windowWidth = 0;
   @Input() data: LabelledChartData[];
+  @Input() currency: boolean;
 
-  constructor(private windowResizeService: WindowResizeService) { }
+  constructor(private windowResizeService: WindowResizeService, private currencyPipe: CurrencyPipe) { }
 
   ngAfterViewInit() {
     this.windowResizeSub = this.windowResizeService.windowSize$.subscribe(resize => {
@@ -28,7 +31,7 @@ export class PieComponent implements AfterViewInit, OnDestroy {
           const checkEmptyInterval = setInterval(() => {
             // Makes sure chart element has been removed before redrawing
             if (this.chart.nativeElement.children.length === 0) {
-              this.drawChart(this.chart.nativeElement.offsetWidth / 2, this.chart.nativeElement as HTMLElement, this.data);
+              this.drawChart(this.chart.nativeElement.offsetWidth / 2, this.chart.nativeElement as HTMLElement, this.data, this.currency);
               clearInterval(checkEmptyInterval);
             }
           }, 20);
@@ -43,7 +46,7 @@ export class PieComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  drawChart(radius: number, chartWrapper: HTMLElement, data: LabelledChartData[]) {
+  drawChart(radius: number, chartWrapper: HTMLElement, data: LabelledChartData[], currency: boolean) {
 
     const margin = 30;
     const width = radius * 2;
@@ -92,7 +95,13 @@ export class PieComponent implements AfterViewInit, OnDestroy {
         .attr('x', 0)
         .attr('y', '0.9em')
         .attr('fill-opacity', 0.7)
-        .text(d => d.data.value));
+        .text(d => {
+          if (!currency) {
+            return d.data.value;
+          } else {
+            return this.currencyPipe.transform(d.data.value, 'GBP');
+          }
+        }));
   }
 
   arcLabel(width, height, svg) {

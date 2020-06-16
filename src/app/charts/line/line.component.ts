@@ -1,13 +1,15 @@
-import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, Input, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { WindowResizeService } from '../../services/window-resize.service';
 import * as d3 from 'd3';
 import { Subscription } from 'rxjs';
 import { DatedChartDataGroups } from '../chart-interfaces';
+import { CurrencyPipe } from '@angular/common';
 
 @Component({
   selector: 'app-line',
   templateUrl: './line.component.html',
-  styleUrls: ['./line.component.css']
+  styleUrls: ['./line.component.css'],
+  providers: [CurrencyPipe]
 })
 export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('chart') chart;
@@ -23,7 +25,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() widthHeightRatio: number;
   dataDates: Date[];
 
-  constructor(private windowResizeService: WindowResizeService) { }
+  constructor(private windowResizeService: WindowResizeService, private currencyPipe: CurrencyPipe) { }
 
   ngOnInit(): void {
     const parseTime = d3.timeParse('%Y-%m-%d');
@@ -293,8 +295,8 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('font-size', 10)
       .attr('x', x)
       .text(() => {
-        if (groupData.unit === '£') {
-          return groupData.unit + value;
+        if (groupData.unit === 'GBP') {
+          return this.currencyPipe.transform(value, groupData.unit);
         } else {
           return value + (groupData.unit ? ' ' + groupData.label + ' ' + groupData.unit : ' ' + groupData.label);
         }

@@ -3,11 +3,13 @@ import { WindowResizeService } from '../../services/window-resize.service';
 import * as d3 from 'd3';
 import { Subscription } from 'rxjs';
 import { LabelledChartData } from '../chart-interfaces';
+import { PercentPipe } from '@angular/common';
 
 @Component({
   selector: 'app-bar',
   templateUrl: './bar.component.html',
-  styleUrls: ['./bar.component.css']
+  styleUrls: ['./bar.component.css'],
+  providers: [PercentPipe]
 })
 export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('chart') chart;
@@ -21,7 +23,7 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() showPercentage: boolean;
   @Input() widthHeightRatio: number;
 
-  constructor(private windowResizeService: WindowResizeService) { }
+  constructor(private windowResizeService: WindowResizeService, private percentPipe: PercentPipe) { }
 
   ngOnInit(): void {
     this.dataTotal = this.data.map(datum => datum.value).reduce((total, value) => total + value);
@@ -104,7 +106,7 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
         .attr('fill', 'black')
         .attr('y', (d: LabelledChartData) => y(d.value) - 3)
         .attr('x', (d: LabelledChartData) => x(d.label) + x.bandwidth() / 2)
-        .text((d: LabelledChartData) => (Math.round(d.value / dataTotal * 100) + '%'))
+        .text((d: LabelledChartData) => this.percentPipe.transform(d.value / dataTotal) )
         .attr('text-anchor', 'middle')
         .attr('font-weight', '600');
     }
