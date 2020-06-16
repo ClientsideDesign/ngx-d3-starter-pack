@@ -1,7 +1,7 @@
 import { Component, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { WindowResizeService } from '../../services/window-resize.service';
-import * as d3 from '../../../../node_modules/d3';
-import * as topojson from '../../../../node_modules/topojson-client';
+import * as d3 from 'd3';
+import * as topojson from 'topojson-client';
 import { Subscription } from 'rxjs';
 import { TerritoryData } from '../chart-interfaces';
 

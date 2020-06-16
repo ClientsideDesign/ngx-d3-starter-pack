@@ -1,7 +1,7 @@
 import { Component, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { WindowResizeService } from '../../services/window-resize.service';
-import * as d3 from '../../../../node_modules/d3';
-import * as venn from '../../../../node_modules/venn.js';
+import * as d3 from 'd3';
+import * as venn from 'venn.js';
 import { Subscription } from 'rxjs';
 import { VennDiagramSet } from '../chart-interfaces';
 
