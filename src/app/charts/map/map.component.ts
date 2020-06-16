@@ -3,20 +3,21 @@ import { WindowResizeService } from '../../services/window-resize.service';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import { Subscription } from 'rxjs';
-import { TerritoryData } from '../chart-interfaces';
+import { TerritoryData, GeometryProperties } from '../chart-interfaces';
+import { WorldAtlas } from 'topojson';
 
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
+
 export class MapComponent implements AfterViewInit, OnDestroy {
   @ViewChild('chart') chart;
   @Input() widthHeightRatio: number;
   @Input() data: TerritoryData[];
   @Input() dataTitle: string;
   populationTotal: number;
-  mapData: any;
   windowResizeSub: Subscription;
   parentWidth = 0;
   windowWidth = 0;
@@ -28,13 +29,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.data.sort((a, b) => {
       return b.value - a.value;
     });
-    d3.json('./../../assets/map-data/countries-110m-no-antarctica.json').then((data) => {
-      this.mapData = data;
-      this.mapData.objects.countries.geometries.forEach(country => {
-        const countryData = this.data.find(population => population.id === parseInt(country.id, 10));
+    d3.json('./../../assets/map-data/countries-110m-no-antarctica.json').then((mapData: WorldAtlas) => {
+      const geometries = mapData.objects.countries.geometries;
+      geometries.forEach((geometry) => {
+        const countryData = this.data.find(population => population.id === parseInt(geometry.id as string, 10));
         if (countryData) {
-          countryData.name = country.properties.name; // Used in table view
-          country.properties.value = countryData.value;
+          const geometryProperties = geometry.properties as GeometryProperties;
+          countryData.name = geometryProperties.name; // Used in table view
+          geometryProperties.value = countryData.value;
         }
       });
       this.populationTotal = this.data.map(datum => datum.value).reduce((total, value) => total + value);
@@ -44,10 +46,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
             this.windowWidth = resize.width;
             d3.select(this.chart.nativeElement).select('*').remove();
             const checkEmptyInterval = setInterval(() => {
-              // Makes sure chart element has been removed before redrawing
               if (this.chart.nativeElement.children.length === 0) {
                 this.drawChart(this.chart.nativeElement.offsetWidth,
-                  this.chart.nativeElement.offsetWidth * this.widthHeightRatio, this.chart.nativeElement);
+                  this.chart.nativeElement.offsetWidth * this.widthHeightRatio, this.chart.nativeElement as HTMLElement, mapData);
                 clearInterval(checkEmptyInterval);
               }
             }, 20);
@@ -63,7 +64,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  drawChart(width, height, chartWrapper) {
+  drawChart(width: number, height: number, chartWrapper: HTMLElement, mapData: WorldAtlas) {
     const svg = d3.select(chartWrapper)
       .append('svg')
       .attr('width', width)
@@ -78,7 +79,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         this.removeTooltips();
       });
 
-    const geojson = topojson.feature(this.mapData, this.mapData.objects.countries);
+    const geojson = topojson.feature(mapData, mapData.objects.countries);
     const projection = d3.geoEquirectangular().fitSize([width, height], geojson);
     const path = d3.geoPath().projection(projection);
 
@@ -88,12 +89,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       .attr('d', path)
       .each((d, i, countries) => {
         const countryArea = d3.select(countries[i]);
-        if (d.properties.value) {
-          const populationShare = d.properties.value / this.populationTotal;
+        const geometryProperties = d.properties as GeometryProperties;
+        if (geometryProperties.value) {
+          const populationShare = geometryProperties.value / this.populationTotal;
           countryArea.attr('fill', 'rgb(89, 161, 79)');
           countryArea.attr('opacity', populationShare / 2 + 0.5);
           countryArea.on('mouseover', () => {
-            this.addTooltip(svg, d.properties.value, populationShare, d.properties.name, path.centroid(d), this.dataTitle);
+            this.addTooltip(svg, geometryProperties.value, populationShare, geometryProperties.name, path.centroid(d), this.dataTitle);
           });
         } else {
           countryArea.attr('fill', '#eeeeee');

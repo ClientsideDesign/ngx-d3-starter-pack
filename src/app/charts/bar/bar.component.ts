@@ -38,7 +38,7 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
             if (this.chart.nativeElement.children.length === 0) {
               this.drawChart(
                 this.chart.nativeElement.offsetWidth,
-                this.chart.nativeElement.offsetWidth * this.widthHeightRatio, this.chart.nativeElement,
+                this.chart.nativeElement.offsetWidth * this.widthHeightRatio, this.chart.nativeElement as HTMLElement,
                 this.data, this.dataTotal, this.xAxisTitle, this.yAxisTitle, this.showPercentage);
               clearInterval(checkEmptyInterval);
             }
@@ -54,7 +54,8 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  drawChart(width, height, chartWrapper, data, dataTotal, xAxisTitle, yAxisTitle, showPercentage) {
+  drawChart(width: number, height: number, chartWrapper: HTMLElement, data: LabelledChartData[],
+            dataTotal: number, xAxisTitle: string, yAxisTitle: string, showPercentage: boolean) {
 
     const margin = { top: 28, right: 20, bottom: 36, left: 40 };
 
@@ -62,10 +63,10 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
       .domain(data.map(d => d.label))
       .range([margin.left, width - margin.right])
       .padding(0.1);
-    // Data labels must be unique
+    // Data labels must be unique!
 
     const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value)])
+      .domain([0, d3.max(data, (d: LabelledChartData) => d.value)])
       .range([height - margin.bottom, margin.top]);
 
     const xAxis = g => g
@@ -92,18 +93,18 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
 
     bars.append('rect')
       .attr('fill', (d, i) => color[i % 10])
-      .attr('x', d => x(d.label))
-      .attr('y', d => y(d.value) - 1)
-      .attr('height', d => y(0) - y(d.value) + 1)
+      .attr('x', (d: LabelledChartData) => x(d.label))
+      .attr('y', (d: LabelledChartData) => y(d.value) - 1)
+      .attr('height', (d: LabelledChartData) => y(0) - y(d.value) + 1)
       .attr('width', x.bandwidth())
       .style('opacity', 0.8);
 
     if (showPercentage) {
       bars.append('text')
         .attr('fill', 'black')
-        .attr('y', d => y(d.value) - 3)
-        .attr('x', d => x(d.label) + x.bandwidth() / 2)
-        .text(d => (Math.round(d.value / dataTotal * 100) + '%'))
+        .attr('y', (d: LabelledChartData) => y(d.value) - 3)
+        .attr('x', (d: LabelledChartData) => x(d.label) + x.bandwidth() / 2)
+        .text((d: LabelledChartData) => (Math.round(d.value / dataTotal * 100) + '%'))
         .attr('text-anchor', 'middle')
         .attr('font-weight', '600');
     }
@@ -129,7 +130,6 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
         .text(yAxisTitle)
         .attr('text-anchor', 'start');
     }
-
 
     svg.append('g')
       .call(xAxis);

@@ -30,7 +30,7 @@ export class VennComponent implements AfterViewInit, OnDestroy {
             // Makes sure chart element has been removed before redrawing
             if (this.chart.nativeElement.children.length === 0) {
               this.drawChart(this.chart.nativeElement.offsetWidth, this.chart.nativeElement.offsetWidth * this.widthHeightRatio,
-                this.chart.nativeElement, this.data);
+                this.chart.nativeElement as HTMLElement, this.data);
               clearInterval(checkEmptyInterval);
             }
           }, 20);
@@ -45,7 +45,7 @@ export class VennComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  drawChart(width, height, chartWrapper, setData) {
+  drawChart(width: number, height: number, chartWrapper: HTMLElement, setData: VennDiagramSet[]) {
     const color = d3.schemeTableau10;
 
     const svg = d3.select(chartWrapper)
@@ -88,16 +88,17 @@ export class VennComponent implements AfterViewInit, OnDestroy {
       .selectAll('.venn-area')
       .each((d, i, areas) => {
         const valueLabel = d3.select(areas[i]).select('text');
+        const dataSet = d as VennDiagramSet;
         valueLabel.text('test')
-          .attr('font-size', d.label ? '10px' : '12px')
-          .attr('font-weight', d.label ? 'bold' : 'normal')
-          .text(d.label ? d.label : d.size)
-          .style('fill', d.label ? '#000000' : '#ffffff');
-        if (d.label) {
-          const valueLabelBBox = valueLabel.node().getBBox();
+          .attr('font-size', dataSet.label ? '10px' : '12px')
+          .attr('font-weight', dataSet.label ? 'bold' : 'normal')
+          .text(dataSet.label ? dataSet.label : dataSet.size)
+          .style('fill', dataSet.label ? '#000000' : '#ffffff');
+        if (dataSet.label) {
+          const valueLabelBBox = (valueLabel.node() as SVGGraphicsElement).getBBox();
           const descriptionLabel = d3.select(areas[i]).append('text');
           descriptionLabel
-            .text(d.size)
+            .text(dataSet.size)
             .attr('x', valueLabel.attr('x'))
             .attr('dy', valueLabel.attr('dy'))
             .attr('y', parseInt(valueLabel.attr('y'), 10) + valueLabelBBox.height)
@@ -179,7 +180,7 @@ export class VennComponent implements AfterViewInit, OnDestroy {
       .style('stroke', null)
       .style('stroke-width', null)
       .style('stroke-opacity', null)
-      .style('mix-blend-mode', d => {
+      .style('mix-blend-mode', (d: VennDiagramSet) => {
         return d.label ? 'multiply' : 'normal';
       });
     d3.selectAll('.tooltip_value').remove();

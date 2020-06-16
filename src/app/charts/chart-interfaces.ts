@@ -4,12 +4,14 @@ export interface LabelledChartData {
 }
 
 export interface DatedChartDataGroup {
-  [prop: string]: {
-    label: string;
-    values: number[];
-    secondAxis: boolean;
-    unit?: string;
-  };
+  [prop: string]: DatedChartDataValue;
+}
+
+export interface DatedChartDataValue {
+  label: string;
+  values: number[];
+  secondAxis: boolean;
+  unit?: string;
 }
 
 export interface DatedChartDataGroups {
@@ -27,4 +29,11 @@ export interface VennDiagramSet {
   sets: string[];
   size: number;
   label?: string;
+}
+
+// For world map:
+
+export interface GeometryProperties {
+  name: string;
+  value: number;
 }

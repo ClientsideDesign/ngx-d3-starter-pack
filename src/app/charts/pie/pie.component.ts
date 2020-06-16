@@ -3,6 +3,7 @@ import { WindowResizeService } from '../../services/window-resize.service';
 import * as d3 from 'd3';
 import { Subscription } from 'rxjs';
 import { LabelledChartData } from '../chart-interfaces';
+import { PieArcDatum } from 'd3';
 
 @Component({
   selector: 'app-pie',
@@ -27,7 +28,7 @@ export class PieComponent implements AfterViewInit, OnDestroy {
           const checkEmptyInterval = setInterval(() => {
             // Makes sure chart element has been removed before redrawing
             if (this.chart.nativeElement.children.length === 0) {
-              this.drawChart(this.chart.nativeElement.offsetWidth / 2, this.chart.nativeElement, this.data);
+              this.drawChart(this.chart.nativeElement.offsetWidth / 2, this.chart.nativeElement as HTMLElement, this.data);
               clearInterval(checkEmptyInterval);
             }
           }, 20);
@@ -42,7 +43,7 @@ export class PieComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  drawChart(radius, chartWrapper, data) {
+  drawChart(radius: number, chartWrapper: HTMLElement, data: LabelledChartData[]) {
 
     const margin = 30;
     const width = radius * 2;
@@ -56,20 +57,20 @@ export class PieComponent implements AfterViewInit, OnDestroy {
       .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
 
     const color = d3.schemeTableau10;
-    const pie = d3.pie().value((d => d.value));
-    const dataReady = pie(data);
+    const pie = d3.pie<LabelledChartData>().value((d) => d.value)(data);
 
-    const arcLabel = d3.arc()
+    const arc = d3.arc<PieArcDatum<LabelledChartData>>()
+      .innerRadius(0)
+      .outerRadius(radius - margin);
+
+    const arcLabel = d3.arc<PieArcDatum<LabelledChartData>>()
       .innerRadius((radius - margin) / 2)
       .outerRadius((radius - margin) / 1.5);
 
     svg.selectAll('path')
-      .data(dataReady)
+      .data(pie)
       .join('path')
-      .attr('d', d3.arc()
-        .innerRadius(0)
-        .outerRadius(radius - margin)
-      )
+      .attr('d', arc)
       .attr('fill', (d, i) => color[(i % 10) + 1])
       .attr('stroke', '#ffffff')
       .style('stroke-width', '1px')
@@ -80,7 +81,7 @@ export class PieComponent implements AfterViewInit, OnDestroy {
       .attr('font-size', 12)
       .attr('text-anchor', 'middle')
       .selectAll('text')
-      .data(dataReady)
+      .data(pie)
       .join('text')
       .attr('transform', d => 'translate(' + arcLabel.centroid(d) + ')')
       .call(text => text.append('tspan')
