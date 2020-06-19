@@ -22,3 +22,16 @@ h2 {
   padding-bottom: 24px;
   margin-bottom: 24px;
 }
+
+@media (max-width: 1200px) {
+
+  ul {
+    display: block;
+  }
+
+  li,
+  li.full_width {
+    padding: 24px;
+    flex: unset;
+  }
+}

@@ -1,7 +1,10 @@
 import { Component, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { WindowResizeService } from '../../services/window-resize.service';
-import * as d3 from 'd3';
-import * as topojson from 'topojson-client';
+import { select } from 'd3-selection';
+import { max } from 'd3-array';
+import { geoEquirectangular, geoPath } from 'd3-geo';
+import { json } from 'd3-fetch';
+import { feature } from 'topojson-client';
 import { Subscription } from 'rxjs';
 import { TerritoryData, GeometryProperties } from '../chart-interfaces';
 import { WorldAtlas } from 'topojson';
@@ -29,7 +32,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.data.sort((a, b) => {
       return b.value - a.value;
     });
-    d3.json('assets/map-data/countries-110m-no-antarctica.json').then((mapData: WorldAtlas) => {
+    json('assets/map-data/countries-110m-no-antarctica.json').then((mapData: WorldAtlas) => {
       const geometries = mapData.objects.countries.geometries;
       geometries.forEach((geometry) => {
         const countryData = this.data.find(population => population.id === parseInt(geometry.id as string, 10));
@@ -44,7 +47,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         if (this.chart && this.chart.nativeElement && this.chart.nativeElement.offsetWidth > 0) {
           if (resize.width !== this.windowWidth) {
             this.windowWidth = resize.width;
-            d3.select(this.chart.nativeElement).select('*').remove();
+            select(this.chart.nativeElement).select('*').remove();
             const checkEmptyInterval = setInterval(() => {
               if (this.chart.nativeElement.children.length === 0) {
                 this.drawChart(this.chart.nativeElement.offsetWidth,
@@ -65,7 +68,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   drawChart(width: number, height: number, chartWrapper: HTMLElement, mapData: WorldAtlas) {
-    const svg = d3.select(chartWrapper)
+    const svg = select(chartWrapper)
       .append('svg')
       .attr('width', width)
       .attr('height', height)
@@ -79,16 +82,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         this.removeTooltips(svg);
       });
 
-    const geojson = topojson.feature(mapData, mapData.objects.countries);
-    const projection = d3.geoEquirectangular().fitSize([width, height], geojson);
-    const path = d3.geoPath().projection(projection);
+    const geojson = feature(mapData, mapData.objects.countries);
+    const projection = geoEquirectangular().fitSize([width, height], geojson);
+    const path = geoPath().projection(projection);
 
     svg.selectAll('path')
       .data(geojson.features)
       .join('path')
       .attr('d', path)
       .each((d, i, countries) => {
-        const countryArea = d3.select(countries[i]);
+        const countryArea = select(countries[i]);
         const geometryProperties = d.properties as GeometryProperties;
         if (geometryProperties.value) {
           const populationShare = geometryProperties.value / this.populationTotal;
@@ -136,7 +139,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const valueBBox = tooltipValue.node().getBBox();
 
     const tooltipDimensions = {
-      width: d3.max([countryBBox.width, valueBBox.width]) + tooltipPadding,
+      width: max([countryBBox.width, valueBBox.width]) + tooltipPadding,
       height: countryBBox.height + valueBBox.height + tooltipPadding * 0.6
     };
 

@@ -1,6 +1,10 @@
 import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { WindowResizeService } from '../../services/window-resize.service';
-import * as d3 from 'd3';
+import { select } from 'd3-selection';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { max } from 'd3-array';
+import { scaleLinear, scaleBand } from 'd3-scale';
+import { schemeTableau10 } from 'd3-scale-chromatic';
 import { Subscription } from 'rxjs';
 import { LabelledChartData } from '../chart-interfaces';
 import { PercentPipe } from '@angular/common';
@@ -34,7 +38,7 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
       if (this.chart && this.chart.nativeElement && this.chart.nativeElement.offsetWidth > 0) {
         if (resize.width !== this.windowWidth) {
           this.windowWidth = resize.width;
-          d3.select(this.chart.nativeElement).select('*').remove();
+          select(this.chart.nativeElement).select('*').remove();
           const checkEmptyInterval = setInterval(() => {
             // Makes sure chart element has been removed before redrawing
             if (this.chart.nativeElement.children.length === 0) {
@@ -61,27 +65,27 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const margin = { top: 28, right: 20, bottom: 36, left: 40 };
 
-    const x = d3.scaleBand()
+    const x = scaleBand()
       .domain(data.map(d => d.label))
       .range([margin.left, width - margin.right])
       .padding(0.1);
     // Data labels must be unique!
 
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, (d: LabelledChartData) => d.value)])
+    const y = scaleLinear()
+      .domain([0, max(data, (d: LabelledChartData) => d.value)])
       .range([height - margin.bottom, margin.top]);
 
     const xAxis = g => g
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).tickSizeOuter(0));
+      .call(axisBottom(x).tickSizeOuter(0));
 
     const yAxis = g => g
       .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(null));
+      .call(axisLeft(y).ticks(null));
 
-    const color = d3.schemeTableau10;
+    const color = schemeTableau10;
 
-    const svg = d3.select(chartWrapper)
+    const svg = select(chartWrapper)
       .append('svg')
       .attr('width', width)
       .attr('height', height)
@@ -106,7 +110,7 @@ export class BarComponent implements OnInit, AfterViewInit, OnDestroy {
         .attr('fill', 'black')
         .attr('y', (d: LabelledChartData) => y(d.value) - 3)
         .attr('x', (d: LabelledChartData) => x(d.label) + x.bandwidth() / 2)
-        .text((d: LabelledChartData) => this.percentPipe.transform(d.value / dataTotal) )
+        .text((d: LabelledChartData) => this.percentPipe.transform(d.value / dataTotal))
         .attr('text-anchor', 'middle')
         .attr('font-weight', '600');
     }

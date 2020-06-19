@@ -1,10 +1,11 @@
 import { Component, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { WindowResizeService } from '../../services/window-resize.service';
-import * as d3 from 'd3';
 import { Subscription } from 'rxjs';
 import { LabelledChartData } from '../chart-interfaces';
-import { PieArcDatum } from 'd3';
 import { CurrencyPipe } from '@angular/common';
+import { select } from 'd3-selection';
+import { schemeTableau10 } from 'd3-scale-chromatic';
+import { pie, arc, PieArcDatum } from 'd3-shape';
 
 @Component({
   selector: 'app-pie',
@@ -27,7 +28,7 @@ export class PieComponent implements AfterViewInit, OnDestroy {
       if (this.chart && this.chart.nativeElement && this.chart.nativeElement.offsetWidth > 0) {
         if (resize.width !== this.windowWidth) {
           this.windowWidth = resize.width;
-          d3.select(this.chart.nativeElement).select('*').remove();
+          select(this.chart.nativeElement).select('*').remove();
           const checkEmptyInterval = setInterval(() => {
             // Makes sure chart element has been removed before redrawing
             if (this.chart.nativeElement.children.length === 0) {
@@ -52,28 +53,28 @@ export class PieComponent implements AfterViewInit, OnDestroy {
     const width = radius * 2;
     const height = radius * 2;
 
-    const svg = d3.select(chartWrapper)
+    const svg = select(chartWrapper)
       .append('svg')
       .attr('width', width)
       .attr('height', height)
       .append('g')
       .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
 
-    const color = d3.schemeTableau10;
-    const pie = d3.pie<LabelledChartData>().value((d) => d.value)(data);
+    const color = schemeTableau10;
+    const pieSegments = pie<LabelledChartData>().value((d) => d.value)(data);
 
-    const arc = d3.arc<PieArcDatum<LabelledChartData>>()
+    const arcCalc = arc<PieArcDatum<LabelledChartData>>()
       .innerRadius(0)
       .outerRadius(radius - margin);
 
-    const arcLabel = d3.arc<PieArcDatum<LabelledChartData>>()
+    const arcLabelCalc = arc<PieArcDatum<LabelledChartData>>()
       .innerRadius((radius - margin) / 2)
       .outerRadius((radius - margin) / 1.5);
 
     svg.selectAll('path')
-      .data(pie)
+      .data(pieSegments)
       .join('path')
-      .attr('d', arc)
+      .attr('d', arcCalc)
       .attr('fill', (d, i) => color[(i % 10) + 1])
       .attr('stroke', '#ffffff')
       .style('stroke-width', '1px')
@@ -84,9 +85,9 @@ export class PieComponent implements AfterViewInit, OnDestroy {
       .attr('font-size', 12)
       .attr('text-anchor', 'middle')
       .selectAll('text')
-      .data(pie)
+      .data(pieSegments)
       .join('text')
-      .attr('transform', d => 'translate(' + arcLabel.centroid(d) + ')')
+      .attr('transform', d => 'translate(' + arcLabelCalc.centroid(d) + ')')
       .call(text => text.append('tspan')
         .attr('y', '-0.4em')
         .attr('font-weight', 'bold')
@@ -103,10 +104,4 @@ export class PieComponent implements AfterViewInit, OnDestroy {
           }
         }));
   }
-
-  arcLabel(width, height, svg) {
-    const radius = Math.min(width, height) / 2 * 0.8;
-    return d3.arc().outerRadius(radius);
-  }
-
 }

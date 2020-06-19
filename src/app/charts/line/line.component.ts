@@ -1,6 +1,14 @@
 import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { WindowResizeService } from '../../services/window-resize.service';
-import * as d3 from 'd3';
+import { select } from 'd3-selection';
+import { axisBottom, axisLeft, axisRight } from 'd3-axis';
+import { max, extent } from 'd3-array';
+import { format } from 'd3-format';
+import { scaleLinear, scaleTime } from 'd3-scale';
+import { timeFormat, timeParse } from 'd3-time-format';
+import { timeWeek } from 'd3-time';
+import { schemeTableau10 } from 'd3-scale-chromatic';
+import { line, area } from 'd3-shape';
 import { Subscription } from 'rxjs';
 import { DatedChartDataGroups } from '../chart-interfaces';
 import { CurrencyPipe } from '@angular/common';
@@ -28,7 +36,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(private windowResizeService: WindowResizeService, private currencyPipe: CurrencyPipe) { }
 
   ngOnInit(): void {
-    const parseTime = d3.timeParse('%Y-%m-%d');
+    const parseTime = timeParse('%Y-%m-%d');
     if (this.data) {
       // Dates and data must be of equal length
       this.dataDates = this.data.dates.map(d => parseTime(d));
@@ -42,7 +50,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
       if (this.chart && this.chart.nativeElement && this.chart.nativeElement.offsetWidth > 0) {
         if (resize.width !== this.windowWidth) {
           this.windowWidth = resize.width;
-          d3.select(this.chart.nativeElement).select('*').remove();
+          select(this.chart.nativeElement).select('*').remove();
           const checkEmptyInterval = setInterval(() => {
             // Makes sure chart element has been removed before redrawing
             if (this.chart.nativeElement.children.length === 0) {
@@ -67,22 +75,22 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
   drawChart(width: number, height: number, chartWrapper: HTMLElement, data: DatedChartDataGroups,
             dataGroupKeys: string[], dates: Date[], secondAxis: boolean, xAxisTitle: string, yAxisTitle: string) {
 
-    const color = d3.schemeTableau10;
+    const color = schemeTableau10;
 
-    const svg = d3.select(chartWrapper)
+    const svg = select(chartWrapper)
       .append('svg')
       .attr('width', width)
       .attr('height', height);
 
     const margin = { top: 28, right: 40, bottom: 36, left: 40 };
 
-    const xScale = d3.scaleTime()
-      .domain(d3.extent(dates))
+    const xScale = scaleTime()
+      .domain(extent(dates))
       .range([margin.left, width - margin.right]);
 
     const xAxis = g => g
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(xScale).tickSizeOuter(0).tickFormat(d3.timeFormat('%b-%d')).ticks(d3.timeWeek.every(1)));
+      .call(axisBottom(xScale).tickSizeOuter(0).tickFormat(timeFormat('%b-%d')).ticks(timeWeek.every(1)));
 
     svg.append('g')
       .call(xAxis);
@@ -91,21 +99,21 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
     let maxY1: number;
 
     if (secondAxis) {
-      maxY0 = d3.max(dataGroupKeys.map(dataGroupKey => {
+      maxY0 = max(dataGroupKeys.map(dataGroupKey => {
         if (!data.groups[dataGroupKey].secondAxis) {
-          return d3.max(data.groups[dataGroupKey].values);
+          return max(data.groups[dataGroupKey].values);
         }
       }));
-      maxY1 = d3.max(dataGroupKeys.map(dataGroupKey => {
+      maxY1 = max(dataGroupKeys.map(dataGroupKey => {
         if (data.groups[dataGroupKey].secondAxis) {
-          return d3.max(data.groups[dataGroupKey].values);
+          return max(data.groups[dataGroupKey].values);
         }
       }));
     } else {
-      maxY0 = d3.max(dataGroupKeys.map(dataGroupKey => d3.max(data.groups[dataGroupKey].values)));
+      maxY0 = max(dataGroupKeys.map(dataGroupKey => max(data.groups[dataGroupKey].values)));
     }
 
-    const y0scale = d3.scaleLinear()
+    const y0scale = scaleLinear()
       .domain([0, maxY0 + 1])
       .range([height - margin.bottom, margin.top]);
 
@@ -115,7 +123,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
     const y0Axis = g => g
       .attr('transform', `translate(${margin.left},0)`)
       .attr('class', 'domain_0')
-      .call(d3.axisLeft(y0scale).tickValues(y0AxisTicks).tickFormat(d3.format('d')));
+      .call(axisLeft(y0scale).tickValues(y0AxisTicks).tickFormat(format('d')));
 
     let y0AxisLabel;
 
@@ -125,7 +133,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
     let y1AxisLabel;
 
     if (secondAxis && maxY1) {
-      y1scale = d3.scaleLinear()
+      y1scale = scaleLinear()
         .domain([0, maxY1 + 1])
         .range([height - margin.bottom, margin.top]);
 
@@ -135,7 +143,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
       y1Axis = g => g
         .attr('transform', `translate(${width - margin.right},0)`)
         .attr('class', 'domain_1')
-        .call(d3.axisRight(y1scale).tickValues(y1AxisTicks).tickFormat(d3.format('d')));
+        .call(axisRight(y1scale).tickValues(y1AxisTicks).tickFormat(format('d')));
     }
 
     svg.append('rect')
@@ -147,11 +155,11 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
         this.removeTooltips(svg);
       });
 
-    const lineFx = d3.line()
+    const lineFx = line()
       .x(d => d[0])
       .y(d => d[1]);
 
-    const areaFx = d3.area()
+    const areaFx = area()
       .x(d => d[0])
       .y0(height - margin.bottom)
       .y1(d => d[1]);
@@ -308,7 +316,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('stroke-width', '1px')
       .style('stroke-dasharray', ('3, 3'))
       .attr('opacity', 0.8)
-      .attr('d', d3.line()([[x, y + 0.5], [secondAxis ? width - margin.right : margin.left, y + 0.5]]));
+      .attr('d', line()([[x, y + 0.5], [secondAxis ? width - margin.right : margin.left, y + 0.5]]));
 
     if (secondAxis) {
       svg.selectAll('.domain_1 .domain')
@@ -347,7 +355,7 @@ export class LineComponent implements OnInit, AfterViewInit, OnDestroy {
         })
         .attr('y', y + valueBBox.height);
       const changeBBox = tooltipChange.node().getBBox();
-      tooltipDimensions.width = d3.max([changeBBox.width, valueBBox.width]) + tooltipPadding;
+      tooltipDimensions.width = max([changeBBox.width, valueBBox.width]) + tooltipPadding;
       tooltipDimensions.height = changeBBox.height + valueBBox.height + Math.round(tooltipPadding * 0.6);
       if (lastPoint) {
         tooltipChange.attr('x', x - (tooltipDimensions.width / 2) + tooltipPadding * 0.5);

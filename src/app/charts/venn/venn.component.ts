@@ -1,7 +1,10 @@
 import { Component, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
 import { WindowResizeService } from '../../services/window-resize.service';
-import * as d3 from 'd3';
-import * as venn from 'venn.js';
+import { select } from 'd3-selection';
+import { max } from 'd3-array';
+import { schemeTableau10 } from 'd3-scale-chromatic';
+import { VennDiagram, sortAreas } from 'venn.js';
+// @types/venn must be renamed @types/venn.js
 import { Subscription } from 'rxjs';
 import { VennDiagramSet } from '../chart-interfaces';
 
@@ -25,7 +28,7 @@ export class VennComponent implements AfterViewInit, OnDestroy {
       if (this.chart && this.chart.nativeElement && this.chart.nativeElement.offsetWidth > 0) {
         if (resize.width !== this.windowWidth) {
           this.windowWidth = resize.width;
-          d3.select(this.chart.nativeElement).select('*').remove();
+          select(this.chart.nativeElement).select('*').remove();
           const checkEmptyInterval = setInterval(() => {
             // Makes sure chart element has been removed before redrawing
             if (this.chart.nativeElement.children.length === 0) {
@@ -46,9 +49,9 @@ export class VennComponent implements AfterViewInit, OnDestroy {
   }
 
   drawChart(width: number, height: number, chartWrapper: HTMLElement, setData: VennDiagramSet[]) {
-    const color = d3.schemeTableau10;
+    const color = schemeTableau10;
 
-    const svg = d3.select(chartWrapper)
+    const svg = select(chartWrapper)
       .append('svg')
       .attr('width', width)
       .attr('height', height);
@@ -62,43 +65,41 @@ export class VennComponent implements AfterViewInit, OnDestroy {
         this.removeTooltips(chartWrapper, setData);
       });
 
-    const chart = venn.VennDiagram().width(width).height(height);
+    const chart = VennDiagram().width(width).height(height);
     svg.datum(setData).call(chart);
 
-    d3.select(chartWrapper)
+    select(chartWrapper)
       .selectAll('.venn-circle path')
       .style('fill-opacity', 0.8)
       .style('fill', (d, i) => color[i + 1])
       .style('mix-blend-mode', 'multiply');
 
-    d3.select(chartWrapper).selectAll('g.venn-intersection')
+    select(chartWrapper).selectAll('g.venn-intersection')
       .on('mouseover', (d, i, paths) => {
-        if (!d3.select('#tooltip_' + i).node()) {
-          const label = d3.select(paths[i]).select('.label');
-          this.addTooltip(chartWrapper, svg, setData, d, i, d3.select(paths[i]), label.attr('x'), label.attr('y'));
+        if (!select('#tooltip_' + i).node()) {
+          const label = select(paths[i]).select('.label');
+          this.addTooltip(chartWrapper, svg, setData, d, i, select(paths[i]), label.attr('x'), label.attr('y'));
         }
       });
 
-    d3.select(chartWrapper).selectAll('g.venn-circle')
-      .on('mouseover', (d, i, paths) => {
+    select(chartWrapper).selectAll('g.venn-circle')
+      .on('mouseover', () => {
         this.removeTooltips(chartWrapper, setData);
       });
 
-    d3.select(chartWrapper)
+    select(chartWrapper)
       .selectAll('.venn-area')
-      .each((d, i, areas) => {
-        const valueLabel = d3.select(areas[i]).select('text');
-        const dataSet = d as VennDiagramSet;
+      .each((d: VennDiagramSet, i, areas) => {
+        const valueLabel = select(areas[i]).select('text');
         valueLabel.text('test')
-          .attr('font-size', dataSet.label ? '10px' : '12px')
-          .attr('font-weight', dataSet.label ? 'bold' : 'normal')
-          .text(dataSet.label ? dataSet.label : dataSet.size)
-          .style('fill', dataSet.label ? '#000000' : '#ffffff');
-        if (dataSet.label) {
+          .attr('font-size', d.label ? '10px' : '12px')
+          .attr('font-weight', d.label ? 'bold' : 'normal')
+          .text(d.label ? d.label : d.size)
+          .style('fill', d.label ? '#000000' : '#ffffff');
+        if (d.label) {
           const valueLabelBBox = (valueLabel.node() as SVGGraphicsElement).getBBox();
-          const descriptionLabel = d3.select(areas[i]).append('text');
-          descriptionLabel
-            .text(dataSet.size)
+          select(areas[i]).append('text')
+            .text(d.size)
             .attr('x', valueLabel.attr('x'))
             .attr('dy', valueLabel.attr('dy'))
             .attr('y', parseInt(valueLabel.attr('y'), 10) + valueLabelBBox.height)
@@ -114,7 +115,7 @@ export class VennComponent implements AfterViewInit, OnDestroy {
     // Make sure any old tooltips / styling has been removed first
     this.removeTooltips(chartWrapper, setData);
 
-    venn.sortAreas(d3.select(chartWrapper), d);
+    sortAreas(select(chartWrapper), d);
 
     area.select('path').style('stroke-opacity', 1)
       .style('stroke-width', 2)
@@ -156,7 +157,7 @@ export class VennComponent implements AfterViewInit, OnDestroy {
     const valueBBox = tooltipValue.node().getBBox();
 
     const tooltipDimensions = {
-      width: d3.max([labelBBox.width, valueBBox.width]) + tooltipPadding,
+      width: max([labelBBox.width, valueBBox.width]) + tooltipPadding,
       height: labelBBox.height + valueBBox.height + tooltipPadding * 0.6
     };
 
@@ -173,8 +174,8 @@ export class VennComponent implements AfterViewInit, OnDestroy {
   }
 
   removeTooltips(chartWrapper, setData) {
-    venn.sortAreas(d3.select(chartWrapper), setData[setData.length - 1]); // Reset order
-    d3.select(chartWrapper)
+    sortAreas(select(chartWrapper), setData[setData.length - 1]); // Reset order
+    select(chartWrapper)
       .selectAll('g.venn-area')
       .select('path')
       .style('stroke', null)
@@ -183,9 +184,9 @@ export class VennComponent implements AfterViewInit, OnDestroy {
       .style('mix-blend-mode', (d: VennDiagramSet) => {
         return d.label ? 'multiply' : 'normal';
       });
-    d3.select(chartWrapper).selectAll('.tooltip_value').remove();
-    d3.select(chartWrapper).selectAll('.tooltip_label').remove();
-    d3.select(chartWrapper).selectAll('.tooltip_background').remove();
+    select(chartWrapper).selectAll('.tooltip_value').remove();
+    select(chartWrapper).selectAll('.tooltip_label').remove();
+    select(chartWrapper).selectAll('.tooltip_background').remove();
   }
 
 }
